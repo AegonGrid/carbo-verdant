@@ -9,10 +9,29 @@ Proof-of-concept will compare a small agroforestry holding and compare the estim
 
 ## How it works
 
-TODO
+1. User defines a boundary and a timeframe
+2. Pipeline gets satellite imagery, computes NDVI for the area, estimates biomass and carbon sequestration.
+3. Outputs are visualized in UI: maps, trends, ...
 
-## TODO
-- Add a area limit to input (50 ha)
+## Roadmap
+
+### POC
+
+- Get satellite data
+- Compute features
+- Plots of interest
+
+### SLC
+
+- Develop API & UI
+- Make it cloud-based
+
+### TODO
+
+- Validate Pydantic models
+    - Add a area limit to input (50 ha)
+    - Add a limit to timeseries (scope defined by S2)
+- Store downloaded image per ID to avoid step rerun
 
 ## Problematics
 
