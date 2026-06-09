@@ -47,3 +47,7 @@ Proof-of-concept will compare a small agroforestry holding and compare the estim
     - Build a similarity embedding
 
 
+## Data
+
+### Copernicus
+- [Ressource limits](https://documentation.dataspace.copernicus.eu/Quotas.html)
