@@ -35,6 +35,10 @@ Proof-of-concept will compare a small agroforestry holding and compare the estim
 
 ## Problematics
 
-- How to estimate biomass from the different forest strata ?
+- How to estimate biomass from the different forest strata ?  
+    - Look into EVI
+- How to estimate biomass w/o groundtruth ?
+    - Look at trends
+    - Build a similarity embedding
 
 
