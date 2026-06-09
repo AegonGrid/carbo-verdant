@@ -26,6 +26,11 @@ Proof-of-concept will compare a small agroforestry holding and compare the estim
 - Develop API & UI
 - Make it cloud-based
 
+### Production-ready / cost optimization
+
+- DVC
+- Spatial database
+
 ### TODO
 
 - Validate Pydantic models
