@@ -1,7 +1,7 @@
-import geopandas as gpd
-from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from dotenv import load_dotenv
 import os
+
+from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 
 def main():
 
