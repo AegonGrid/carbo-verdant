@@ -40,7 +40,7 @@ def main():
 
     aoi_bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
 
-    # Search Sentinel Hub catalog
+    # Search items in Sentinel Hub catalog
     catalog = SentinelHubCatalog(config=config)
     
     search_iterator = catalog.search(
