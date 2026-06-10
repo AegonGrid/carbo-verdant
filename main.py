@@ -46,7 +46,7 @@ def main():
     search_iterator = catalog.search(
         DataCollection.SENTINEL2_L2A,
         bbox=aoi_bbox,
-        time=("2020-01-01"),
+        time=("2020-01-02"),
         fields={
             "include": ["id", "properties.datetime"],
             "exclude": []
