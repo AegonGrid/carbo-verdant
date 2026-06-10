@@ -1,26 +1,65 @@
 from dotenv import load_dotenv
 import os
+import json
 
-from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
+from sentinelhub import (
+    SHConfig,
+    SentinelHubCatalog,
+    DataCollection,
+    BBox,
+    CRS,
+)
+
 
 def main():
 
+    # Configure Sentinel Hub credentials
     load_dotenv()
-    COPERNICUS_USERNAME = os.getenv('COPERNICUS_USERNAME')
-    COPERNICUS_PASSWORD = os.getenv('COPERNICUS_PASSWORD')
 
-    aoi_path = "data/example_polygon_2.geojson"
-    
-    api = SentinelAPI(COPERNICUS_USERNAME, COPERNICUS_PASSWORD, 'https://apihub.copernicus.eu/apihub')
-    footprint = geojson_to_wkt(read_geojson(aoi_path))
-    products = api.query(
-        area=footprint,
-        date=("20200101", "20201202"),  # YYYYMMDD format
-        platformname="Sentinel-2",
-        producttype="S2MSI2A",  # Level-2A (surface reflectance)
-        cloudcoverpercentage=(0, 10)  # 0-10% cloud cover
+    config = SHConfig()
+    config.sh_client_id = os.getenv("SH_CLIENT_ID")
+    config.sh_client_secret = os.getenv("SH_CLIENT_SECRET")
+
+    config.sh_token_url = (
+        "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
     )
-    api.download_all(products[:1], directory="data/sentinel2")
+    config.sh_base_url = "https://sh.dataspace.copernicus.eu"
+
+    # Define Area Of Interest
+    aoi_path = "data/example_polygon_2.geojson"
+    with open(aoi_path) as f:
+        geojson = json.load(f)
+    geometry = geojson["geometry"]
+
+    # Convert polygon to bbox (Sentinel Hub Catalog uses bbox)
+    coords = geometry["coordinates"][0]
+    lons = [c[0] for c in coords]
+    lats = [c[1] for c in coords]
+
+    bbox_coords = [min(lons), min(lats), max(lons), max(lats)]
+
+    aoi_bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
+
+    # Search Sentinel Hub catalog
+    catalog = SentinelHubCatalog(config=config)
     
+    search_iterator = catalog.search(
+        DataCollection.SENTINEL2_L2A,
+        bbox=aoi_bbox,
+        time=("2020-01-01"),
+        fields={
+            "include": ["id", "properties.datetime"],
+            "exclude": []
+        },
+    )
+
+    items = list(search_iterator)
+
+    print(f"Found {len(items)} products")
+
+    if not items:
+        return
+
+
 if __name__ == "__main__":
     main()
