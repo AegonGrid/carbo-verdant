@@ -1,4 +1,7 @@
 from typing import Tuple
+from pathlib import Path
+from typing import Callable
+
 
 from sentinelhub import (
     SentinelHubRequest,
@@ -12,7 +15,6 @@ from utils.sentinel_hub.evalscript import (
     evalscript_ndvi,
     evalscript_true_color,
 )
-
 
 COPERNICUS_DATA_COLLECTION = DataCollection.SENTINEL2_L2A.define_from(
     name="s2l2a",
@@ -95,3 +97,35 @@ def create_true_color_request(
         mosaicking_order=mosaicking_order,
         output_format=output_format,
     )
+
+
+def download_sentinel_data(
+    item_id: str,
+    date: str,
+    images_dir: Path,
+    request_builders: dict[str, Callable[..., SentinelHubRequest]],
+    aoi_bbox: BBox,
+    aoi_size: tuple[int, int],
+    config: SHConfig,
+) -> None:
+    """
+    Download all configured Sentinel image data for a given acquisition.
+    """
+
+    for image_type, request_builder in request_builders.items():
+
+        output_path = images_dir / f"{image_type}_{date}_{item_id}.tif"
+
+        if output_path.exists():
+            continue
+
+        request = request_builder(
+            aoi_bbox=aoi_bbox,
+            aoi_size=aoi_size,
+            config=config,
+            date=date,
+        )
+        image_data = request.get_data()[0]
+
+        output_path.write_bytes(image_data)
+        print(f"Downloaded: {output_path}")
