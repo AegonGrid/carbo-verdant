@@ -69,5 +69,6 @@ def main():
         print(f"Processed {i+1}/{len(items)} items: {item['id']}")
 
 
+
 if __name__ == "__main__":
     main()
