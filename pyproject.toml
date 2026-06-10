@@ -10,5 +10,8 @@ dependencies = [
     "ipykernel>=7.2.0",
     "ipywidgets>=8.1.8",
     "jupyter>=1.1.1",
-    "sentinelsat>=1.2.1",
+    "python-dotenv>=1.2.2",
+    "requests>=2.34.2",
+    "sentinelhub>=3.11.5",
+    "shapely>=2.1.2",
 ]
