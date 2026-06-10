@@ -114,7 +114,7 @@ def download_sentinel_data(
 
     for image_type, request_builder in request_builders.items():
 
-        output_path = images_dir / f"{image_type}_{date}_{item_id}.tif"
+        output_path = images_dir / f"{image_type}_{item_id}.tif"
 
         if output_path.exists():
             continue
