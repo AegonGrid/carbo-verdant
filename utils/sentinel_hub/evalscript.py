@@ -3,6 +3,7 @@
 RGB uses B04, B03, B02 Sentinel-2 L2A bands
 It corresponds to reflectance values in UINT8 format (0-255 range).
 """
+
 evalscript_true_color = """
     //VERSION=3
 
