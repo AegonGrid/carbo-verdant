@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 import json
+from pathlib import Path
 
 from sentinelhub import (
     SHConfig,
@@ -11,8 +12,12 @@ from sentinelhub import (
     bbox_to_dimensions,
 )
 
-from utils.sentinel_hub.requests import create_ndvi_request
-from config.inputs import TIMESERIES_START, TIMESERIES_END, RESOLUTION  
+from utils.sentinel_hub.requests import (
+    create_ndvi_request,
+    create_true_color_request,
+    download_sentinel_data,
+)
+from config.inputs import TIMESERIES_START, TIMESERIES_END, RESOLUTION
 
 
 def main():
@@ -24,9 +29,7 @@ def main():
     config.sh_client_id = os.getenv("SH_CLIENT_ID")
     config.sh_client_secret = os.getenv("SH_CLIENT_SECRET")
 
-    config.sh_token_url = (
-        "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
-    )
+    config.sh_token_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
     config.sh_base_url = "https://sh.dataspace.copernicus.eu"
 
     # Define Area Of Interest
@@ -47,15 +50,12 @@ def main():
 
     # Search items in Sentinel Hub catalog
     catalog = SentinelHubCatalog(config=config)
-    
+
     search_iterator = catalog.search(
         DataCollection.SENTINEL2_L2A,
         bbox=aoi_bbox,
         time=(TIMESERIES_START, TIMESERIES_END),
-        fields={
-            "include": ["id", "properties.datetime"],
-            "exclude": []
-        },
+        fields={"include": ["id", "properties.datetime"], "exclude": []},
     )
 
     items = list(search_iterator)
@@ -66,24 +66,30 @@ def main():
         return
 
     # Download images
-    for i, item in enumerate(items[:5]):
 
-        if item["id"] not in os.listdir("data/sentinel_images"):
+    images_dir = Path("data/sentinel_images")
+    images_dir.mkdir(parents=True, exist_ok=True)
 
-            print(f"Downloading product {i+1}/{len(items)}: {item['id']}")
-            date = item["properties"]["datetime"].split("T")[0]
-            request = create_ndvi_request(
-                aoi_bbox=aoi_bbox,
-                aoi_size=aoi_size,
-                config=config, 
-                date=date,
-            )
-            img = request.get_data()[0]
-            with open(f"data/sentinel_images/ndvi_{date}_{item['id']}.tif", "wb") as f:
-                f.write(img)
-            
-        print(f"Processed {i+1}/{len(items)} items: {item['id']}")
+    SATELLITE_REQUESTS = {
+        "ndvi": create_ndvi_request,
+        "rgb": create_true_color_request,
+    }
 
+    for i, item in enumerate(items):
+
+        date = item["properties"]["datetime"].split("T")[0]
+
+        download_sentinel_data(
+            item_id=item["id"],
+            date=date,
+            images_dir=images_dir,
+            request_builders=SATELLITE_REQUESTS,
+            aoi_bbox=aoi_bbox,
+            aoi_size=aoi_size,
+            config=config,
+        )
+
+    print(f"Processed {i+1}/{len(items)} items: {item['id']}")
 
 
 if __name__ == "__main__":
