@@ -8,7 +8,11 @@ from sentinelhub import (
     DataCollection,
     BBox,
     CRS,
+    bbox_to_dimensions,
 )
+
+from utils.sentinel_hub.requests import create_ndvi_request
+from config.inputs import TIMESERIES_START, TIMESERIES_END, RESOLUTION  
 
 
 def main():
@@ -39,6 +43,7 @@ def main():
     bbox_coords = [min(lons), min(lats), max(lons), max(lats)]
 
     aoi_bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
+    aoi_size = bbox_to_dimensions(aoi_bbox, resolution=RESOLUTION)
 
     # Search items in Sentinel Hub catalog
     catalog = SentinelHubCatalog(config=config)
@@ -46,7 +51,7 @@ def main():
     search_iterator = catalog.search(
         DataCollection.SENTINEL2_L2A,
         bbox=aoi_bbox,
-        time=("2020-01-02"),
+        time=(TIMESERIES_START, TIMESERIES_END),
         fields={
             "include": ["id", "properties.datetime"],
             "exclude": []
@@ -64,7 +69,18 @@ def main():
     for i, item in enumerate(items[:5]):
 
         if item["id"] not in os.listdir("data/sentinel_images"):
+
             print(f"Downloading product {i+1}/{len(items)}: {item['id']}")
+            date = item["properties"]["datetime"].split("T")[0]
+            request = create_ndvi_request(
+                aoi_bbox=aoi_bbox,
+                aoi_size=aoi_size,
+                config=config, 
+                date=date,
+            )
+            img = request.get_data()[0]
+            with open(f"data/sentinel_images/ndvi_{date}_{item['id']}.tif", "wb") as f:
+                f.write(img)
             
         print(f"Processed {i+1}/{len(items)} items: {item['id']}")
 
