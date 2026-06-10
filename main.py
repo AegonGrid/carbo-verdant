@@ -60,6 +60,14 @@ def main():
     if not items:
         return
 
+    # Download images
+    for i, item in enumerate(items[:5]):
+
+        if item["id"] not in os.listdir("data/sentinel_images"):
+            print(f"Downloading product {i+1}/{len(items)}: {item['id']}")
+            
+        print(f"Processed {i+1}/{len(items)} items: {item['id']}")
+
 
 if __name__ == "__main__":
     main()
