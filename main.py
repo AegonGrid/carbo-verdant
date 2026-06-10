@@ -33,7 +33,7 @@ def main():
     config.sh_base_url = "https://sh.dataspace.copernicus.eu"
 
     # Define Area Of Interest
-    aoi_path = "data/example_polygon_2.geojson"
+    aoi_path = "data/example_polygon_1.geojson"
     with open(aoi_path) as f:
         geojson = json.load(f)
     geometry = geojson["geometry"]

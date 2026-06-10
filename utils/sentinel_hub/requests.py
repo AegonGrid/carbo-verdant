@@ -2,6 +2,10 @@ from typing import Tuple
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+import rasterio
+from rasterio.transform import from_bounds
+from rasterio.crs import CRS
 
 from sentinelhub import (
     SentinelHubRequest,
@@ -30,7 +34,7 @@ def _create_request(
     config: SHConfig,
     date: str,
     mosaicking_order: str = "leastCC",
-    output_format: MimeType = MimeType.PNG,
+    output_format: MimeType = MimeType.TIFF,
 ) -> SentinelHubRequest:
     """Build a Sentinel Hub request for a single date."""
 
@@ -65,7 +69,7 @@ def create_ndvi_request(
     config: SHConfig,
     date: str,
     mosaicking_order: str = "leastCC",
-    output_format: MimeType = MimeType.PNG,
+    output_format: MimeType = MimeType.TIFF,
 ) -> SentinelHubRequest:
     """Create an NDVI imagery request."""
     return _create_request(
@@ -85,7 +89,7 @@ def create_true_color_request(
     config: SHConfig,
     date: str,
     mosaicking_order: str = "leastCC",
-    output_format: MimeType = MimeType.PNG,
+    output_format: MimeType = MimeType.TIFF,
 ) -> SentinelHubRequest:
     """Create a true-color (RGB) imagery request."""
     return _create_request(
@@ -97,6 +101,49 @@ def create_true_color_request(
         mosaicking_order=mosaicking_order,
         output_format=output_format,
     )
+
+
+def _write_geotiff(
+    array: np.ndarray,
+    path: Path,
+    bbox: BBox,
+    crs: str = "EPSG:4326",
+) -> None:
+    """
+    Save Sentinel Hub array as proper GeoTIFF.
+    Supports:
+    - NDVI (H, W)
+    - RGB/RGBA (H, W, C)
+    """
+
+    arr = array
+
+    # NDVI case: (H, W) → (1, H, W)
+    if arr.ndim == 2:
+        arr = arr[np.newaxis, :, :]
+
+    # RGB case: (H, W, C) → (C, H, W)
+    elif arr.ndim == 3:
+        arr = np.transpose(arr, (2, 0, 1))
+
+    bands, height, width = arr.shape
+
+    minx, miny, maxx, maxy = bbox
+
+    transform = from_bounds(minx, miny, maxx, maxy, width, height)
+
+    with rasterio.open(
+        path,
+        "w",
+        driver="GTiff",
+        height=height,
+        width=width,
+        count=bands,
+        dtype=arr.dtype,
+        crs=CRS.from_string(crs),
+        transform=transform,
+    ) as dst:
+        dst.write(arr)
 
 
 def download_sentinel_data(
@@ -127,5 +174,5 @@ def download_sentinel_data(
         )
         image_data = request.get_data()[0]
 
-        output_path.write_bytes(image_data)
+        _write_geotiff(image_data, output_path, aoi_bbox)
         print(f"Downloaded: {output_path}")
