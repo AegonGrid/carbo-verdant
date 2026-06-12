@@ -13,13 +13,36 @@ evalscript_true_color = """
                 bands: ["B02", "B03", "B04"]
             }],
             output: {
-                bands: 3
+                bands: 3,
+                sampleType: "UINT8"
             }
         };
     }
 
+    function clamp(value) {
+        return Math.min(Math.max(value, 0.0), 1.0);
+    }
+
+    function stretch(value, minVal, maxVal) {
+        return clamp((value - minVal) / (maxVal - minVal));
+    }
+
     function evaluatePixel(sample) {
-        return [sample.B04, sample.B03, sample.B02];
+        let r = stretch(sample.B04, 0.02, 0.35);
+        let g = stretch(sample.B03, 0.02, 0.35);
+        let b = stretch(sample.B02, 0.02, 0.35);
+
+        // optional gamma to brighten midtones
+        let gamma = 1.0 / 1.3;
+        r = Math.pow(r, gamma);
+        g = Math.pow(g, gamma);
+        b = Math.pow(b, gamma);
+
+        return [
+            Math.round(r * 255.0),
+            Math.round(g * 255.0),
+            Math.round(b * 255.0)
+        ];
     }
 """
 
