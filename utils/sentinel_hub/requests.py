@@ -20,6 +20,20 @@ from utils.sentinel_hub.evalscript import (
     evalscript_true_color,
 )
 
+MAX_SATELLITE_REQUEST_DIMENSION = 2500
+
+
+def validate_request_size(aoi_size: tuple[int, int]) -> None:
+    """Raise if the request size exceeds Sentinel Hub process limits."""
+
+    width, height = aoi_size
+    if width > MAX_SATELLITE_REQUEST_DIMENSION or height > MAX_SATELLITE_REQUEST_DIMENSION:
+        raise ValueError(
+            f"Requested image size {width}x{height} exceeds Sentinel Hub process limit "
+            f"of {MAX_SATELLITE_REQUEST_DIMENSION}x{MAX_SATELLITE_REQUEST_DIMENSION}. "
+            "Reduce resolution or request a smaller AOI."
+        )
+
 COPERNICUS_DATA_COLLECTION = DataCollection.SENTINEL2_L2A.define_from(
     name="s2l2a",
     service_url="https://sh.dataspace.copernicus.eu",
@@ -165,6 +179,8 @@ def download_sentinel_data(
 
         if output_path.exists():
             continue
+
+        validate_request_size(aoi_size)
 
         request = request_builder(
             aoi_bbox=aoi_bbox,
