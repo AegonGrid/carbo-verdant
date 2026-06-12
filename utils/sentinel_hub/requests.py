@@ -27,12 +27,16 @@ def validate_request_size(aoi_size: tuple[int, int]) -> None:
     """Raise if the request size exceeds Sentinel Hub process limits."""
 
     width, height = aoi_size
-    if width > MAX_SATELLITE_REQUEST_DIMENSION or height > MAX_SATELLITE_REQUEST_DIMENSION:
+    if (
+        width > MAX_SATELLITE_REQUEST_DIMENSION
+        or height > MAX_SATELLITE_REQUEST_DIMENSION
+    ):
         raise ValueError(
             f"Requested image size {width}x{height} exceeds Sentinel Hub process limit "
             f"of {MAX_SATELLITE_REQUEST_DIMENSION}x{MAX_SATELLITE_REQUEST_DIMENSION}. "
             "Reduce resolution or request a smaller AOI."
         )
+
 
 COPERNICUS_DATA_COLLECTION = DataCollection.SENTINEL2_L2A.define_from(
     name="s2l2a",
@@ -85,7 +89,7 @@ def create_ndvi_request(
     mosaicking_order: str = "leastCC",
     output_format: MimeType = MimeType.TIFF,
 ) -> SentinelHubRequest:
-    """Create an NDVI imagery request."""
+    """Create a color-mapped NDVI imagery request."""
     return _create_request(
         evalscript=evalscript_ndvi,
         aoi_bbox=aoi_bbox,
