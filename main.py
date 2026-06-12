@@ -17,7 +17,13 @@ from utils.sentinel_hub.requests import (
     create_true_color_request,
     download_sentinel_data,
 )
-from config.inputs import TIMESERIES_START, TIMESERIES_END, RESOLUTION
+from utils.sentinel_hub.search import search_sentinel2_products
+from config.inputs import (
+    TIMESERIES_START,
+    TIMESERIES_END,
+    RESOLUTION,
+    MAX_CLOUD_COVER_PCT,
+)
 
 
 def main():
@@ -48,18 +54,15 @@ def main():
     aoi_bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
     aoi_size = bbox_to_dimensions(aoi_bbox, resolution=RESOLUTION)
 
-    # Search items in Sentinel Hub catalog
+    # Find candidate Sentinel-2 products before downloading
     catalog = SentinelHubCatalog(config=config)
-
-    search_iterator = catalog.search(
-        DataCollection.SENTINEL2_L2A,
-        bbox=aoi_bbox,
-        time=(TIMESERIES_START, TIMESERIES_END),
-        fields={"include": ["id", "properties.datetime"], "exclude": []},
+    items = search_sentinel2_products(
+        catalog=catalog,
+        aoi_bbox=aoi_bbox,
+        time_interval=(TIMESERIES_START, TIMESERIES_END),
+        max_cloud_cover_pct=MAX_CLOUD_COVER_PCT,
     )
-
-    items = list(search_iterator)
-
+    print(f"Using cloud cover threshold: {MAX_CLOUD_COVER_PCT}%")
     print(f"Found {len(items)} products")
 
     if not items:
@@ -79,6 +82,7 @@ def main():
 
         date = item["properties"]["datetime"].split("T")[0]
 
+        # TODO: only download cloudless image, check forest saturation for NDVI
         download_sentinel_data(
             item_id=item["id"],
             date=date,
