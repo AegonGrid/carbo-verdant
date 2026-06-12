@@ -24,6 +24,8 @@ def search_sentinel2_products(
             "id",
             "properties.datetime",
             "properties.eo:cloud_cover",
+            "geometry",
+            "bbox",
         ],
         "exclude": [],
     }

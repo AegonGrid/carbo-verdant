@@ -6,7 +6,6 @@ from pathlib import Path
 from sentinelhub import (
     SHConfig,
     SentinelHubCatalog,
-    DataCollection,
     BBox,
     CRS,
     bbox_to_dimensions,
@@ -49,9 +48,9 @@ def main():
     lons = [c[0] for c in coords]
     lats = [c[1] for c in coords]
 
-    bbox_coords = [min(lons), min(lats), max(lons), max(lats)]
+    aoi_bbox_coords = [min(lons), min(lats), max(lons), max(lats)]
 
-    aoi_bbox = BBox(bbox=bbox_coords, crs=CRS.WGS84)
+    aoi_bbox = BBox(bbox=aoi_bbox_coords, crs=CRS.WGS84)
     aoi_size = bbox_to_dimensions(aoi_bbox, resolution=RESOLUTION)
 
     # Find candidate Sentinel-2 products before downloading
@@ -82,7 +81,6 @@ def main():
 
         date = item["properties"]["datetime"].split("T")[0]
 
-        # TODO: only download cloudless image, check forest saturation for NDVI
         download_sentinel_data(
             item_id=item["id"],
             date=date,
